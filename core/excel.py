@@ -47,9 +47,24 @@ class Excel:
 
     def connect_account(self, account: Account) -> None:
         """
-        Подключает аккаунт к таблице. Нужен чтобы можно было использовать один объект Excel для нескольких аккаунтов.
+        Подключает аккаунт к таблице.
+
+        Нужен чтобы можно было использовать один объект Excel для нескольких аккаунтов.
+        Автоматически находит строку аккаунта по profile_number.
+
         :param account: объект аккаунта
         :return: None
+
+        Examples:
+            >>> from utils.utils import get_accounts
+            >>> accounts = get_accounts()
+            >>> excel = Excel(file='accounts.xlsx')
+            >>> 
+            >>> for account in accounts:
+            ...     excel.connect_account(account)
+            ...     status = excel.get_cell('Status')
+            ...     if status == 'Work':
+            ...         excel.set_cell('Status', 'Processing')
         """
         self.account = account
         self.acc_row = self._find_acc_row(str(self.account.profile_number))
@@ -115,12 +130,26 @@ class Excel:
 
     def set_cell(self, column_name: str, value: str | int | float, row: Optional[int] = None) -> None:
         """
-        Устанавливает значение в ячейку по имени столбца и номеру строчки, если номер строчки не передан,
-        записывает в строку аккаунта. Если столбец не существует, создает его.
+        Устанавливает значение в ячейку по имени столбца и номеру строчки.
+
+        Если номер строчки не передан, записывает в строку аккаунта.
+        Если столбец не существует, создает его автоматически.
+        Файл сохраняется после записи.
+
         :param column_name: имя столбца
-        :param value: значение
+        :param value: значение для записи (строка, число или float)
         :param row: номер строки, если не указан, то берется строка аккаунта
         :return: None
+
+        Examples:
+            >>> # Записать статус в строку аккаунта
+            >>> excel.set_cell('Status', 'Completed')
+
+            >>> # Записать баланс
+            >>> excel.set_cell('Balance', 1.234)
+
+            >>> # Записать в конкретную строку
+            >>> excel.set_cell('Status', 'Working', row=10)
         """
         row = self.acc_row if not row else row
 
@@ -149,15 +178,27 @@ class Excel:
             for cell in row:
                 if cell.value == column_name:
                     return cell.column
-        logger.warning(f'{self.account.profile_number} Столбец {column_name} не найден, создаем новый.')
+        logger.warning(
+            f'{self.account.profile_number} Столбец {column_name} не найден, создаем новый.')
         return self.add_column(column_name)
 
     def get_cell(self, column_name: str, row: Optional[int] = None) -> str | int | None:
         """
         Возвращает значение ячейки по имени столбца из строки аккаунта.
+
+        Если столбец не существует, он будет создан автоматически.
+
         :param column_name: имя столбца
         :param row: номер строки, если не указан, то берется строка аккаунта
-        :return: значение ячейки, может быть строкой, числом или None
+        :return: значение ячейки (строка, число или None если ячейка пустая)
+
+        Examples:
+            >>> # Прочитать статус из строки аккаунта
+            >>> status = excel.get_cell('Status')
+            >>> print(f'Статус: {status}')
+
+            >>> # Прочитать из конкретной строки
+            >>> value = excel.get_cell('Balance', row=5)
         """
         row = self.acc_row if not row else row
 
@@ -220,17 +261,36 @@ class Excel:
                 cell.value = float(cell.value)
                 self._table.save(self._file)
             else:
-                raise TypeError(f'Значение в столбце {column_name} не является числом')
+                raise TypeError(
+                    f'Значение в столбце {column_name} не является числом')
 
         return cell.value
 
     def increase_counter(self, column_name: str, number: int = 1, row: Optional[int] = None) -> int:
         """
-        Увеличивает значение счетчика на 1 или на указанное число. Если столбец не существует, создает его.
-        Если ячейка пустая, устанавливает значение 0 и увеличивает на 1 или на указанное число.
+        Увеличивает значение счетчика на 1 или на указанное число.
+
+        Если столбец не существует, создает его. Если ячейка пустая, устанавливает
+        значение 0 и увеличивает на указанное число. Файл сохраняется после операции.
+
         :param column_name: имя столбца
+        :param number: число, на которое увеличить счетчик (по умолчанию 1)
         :param row: номер строки, если не указан, то берется строка аккаунта
         :return: результирующее значение в ячейке
+
+        :raises TypeError: если значение в ячейке не является числом
+
+        Examples:
+            >>> # Увеличить счетчик на 1
+            >>> new_value = excel.increase_counter('Swaps')
+            >>> print(f'Swaps: {new_value}')
+
+            >>> # Увеличить на произвольное число
+            >>> excel.increase_counter('TX Count', number=5)
+
+            >>> # Использование после операции
+            >>> onchain.send_token(to_address='0x...', amount=0.01)
+            >>> excel.increase_counter('Transactions')
         """
         row = self.acc_row if not row else row
 
@@ -243,7 +303,8 @@ class Excel:
             if cell.value.isdigit():
                 cell.value = int(cell.value)
             else:
-                raise TypeError(f'Значение в столбце {column_name} не является числом')
+                raise TypeError(
+                    f'Значение в столбце {column_name} не является числом')
 
         cell.value += number
         self._table.save(self._file)
@@ -252,26 +313,53 @@ class Excel:
     def set_date(self, column_name: str, row: Optional[int] = None) -> None:
         """
         Записывает текущее время и дату в excel таблицу.
-        Формат даты настраивается в файле config/settings.py
+
+        Формат даты настраивается в файле config/settings.py (параметр date_format).
+        По умолчанию: '%Y-%m-%d %H:%M:%S'
+
         :param column_name: имя столбца
         :param row: номер строки, если не указан, то берется строка аккаунта
         :return: None
+
+        Examples:
+            >>> # Записать текущую дату
+            >>> excel.set_date('Last Activity')
+
+            >>> # После выполнения операции
+            >>> onchain.send_token(to_address='0x...', amount=0.01)
+            >>> excel.set_date('Last TX Date')
         """
         row = self.acc_row if not row else row
 
         col_num = self.find_column(column_name)
 
-        self._sheet.cell(row=row, column=col_num, value=datetime.now().strftime(config.date_format))
+        self._sheet.cell(row=row, column=col_num,
+                         value=datetime.now().strftime(config.date_format))
         self._table.save(self._file)
 
     def get_date(self, column_name: str, row: Optional[int] = None) -> datetime:
         """
-        Возвращает дату из ячейки в таблице Excel, если в ячейке пусто, возвращает старую дату.
+        Возвращает дату из ячейки в таблице Excel.
+
+        Если в ячейке пусто, возвращает старую дату (2000-01-01).
         Не указывайте столбец, где есть что-либо кроме даты, иначе получите ошибку.
-        Формат даты настраивается в файле config/settings.py
+        Формат даты настраивается в файле config/settings.py (параметр date_format).
+
         :param column_name: имя столбца
         :param row: номер строки, если не указан, то берется строка аккаунта
-        :return: значение ячейки
+        :return: объект datetime с датой из ячейки
+
+        Examples:
+            >>> # Получить дату последней активности
+            >>> last_date = excel.get_date('Last Activity')
+            >>> print(f'Последняя активность: {last_date}')
+
+            >>> # Проверить, давно ли была активность
+            >>> from datetime import datetime, timedelta
+            >>> last_tx = excel.get_date('Last TX Date')
+            >>> days_passed = (datetime.now() - last_tx).days
+            >>> if days_passed > 7:
+            ...     print('Прошло больше недели')
         """
         row = self.acc_row if not row else row
 

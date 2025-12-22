@@ -36,7 +36,8 @@ class Ads:
         self._prepare_browser()
 
         if config.is_mobile_proxy:
-            get_response(config.link_change_ip, attempts=1, return_except=False)
+            get_response(config.link_change_ip,
+                         attempts=1, return_except=False)
 
         if config.check_proxy:
             self._check_proxy()
@@ -69,7 +70,8 @@ class Ads:
             data = get_response(url, params)
             return data.get('data', {}).get('ws', {}).get('puppeteer', '')
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при открытии браузера: {e}')
+            logger.error(
+                f'{self.profile_number} Ошибка при открытии браузера: {e}')
             raise e
 
     def _check_browser_status(self) -> Optional[str]:
@@ -87,7 +89,8 @@ class Ads:
                 return data.get('data', {}).get('ws', {}).get('puppeteer', '')
             return None
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при проверке статуса браузера (запущен ли ADS?: {e} ')
+            logger.error(
+                f'{self.profile_number} Ошибка при проверке статуса браузера (запущен ли ADS?: {e} ')
             raise e
 
     def _start_browser(self) -> Browser:
@@ -108,13 +111,16 @@ class Ads:
                 random_sleep(4, 5)
                 self.pw = sync_playwright().start()
                 slow_mo = random.randint(*config.speed)
-                browser = self.pw.chromium.connect_over_cdp(endpoint, slow_mo=slow_mo)
+                browser = self.pw.chromium.connect_over_cdp(
+                    endpoint, slow_mo=slow_mo)
                 if browser.is_connected():
                     return browser
-                logger.error(f'{self.profile_number} Error не удалось запустить браузер')
+                logger.error(
+                    f'{self.profile_number} Error не удалось запустить браузер')
 
             except Exception as e:
-                logger.error(f'{self.profile_number} Error не удалось запустить браузер {e}')
+                logger.error(
+                    f'{self.profile_number} Error не удалось запустить браузер {e}')
                 self.pw.stop() if self.pw else None
                 random_sleep(5, 10)
 
@@ -133,7 +139,8 @@ class Ads:
                     page.close()
 
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при закрытии страниц: {e}')
+            logger.error(
+                f'{self.profile_number} Ошибка при закрытии страниц: {e}')
             raise e
 
     def close_browser(self) -> None:
@@ -154,16 +161,33 @@ class Ads:
         try:
             get_response(url, params)
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при остановке браузера: {e}')
+            logger.error(
+                f'{self.profile_number} Ошибка при остановке браузера: {e}')
             raise e
 
     def catch_page(self, url_contains: str | list[str] = None, timeout: int = 10) -> \
             Optional[Page]:
         """
-        Ищет страницу по частичному совпадению url. Если не находит, возвращает None. Каждые 3 попытки обновляет контекст.
-        :param url_contains: текст, который ищем в url или список текстов
-        :param timeout: время ожидания
-        :return: страница с нужным url или None
+        Ищет страницу (вкладку) по частичному совпадению url.
+
+        Если не находит, возвращает None. Каждые 3 попытки обновляет контекст для
+        обнаружения новых вкладок. Полезно для работы с popup окнами.
+
+        :param url_contains: текст, который ищем в url или список текстов для поиска
+        :param timeout: время ожидания в секундах (количество попыток)
+        :return: объект Page с нужным url или None если не найдена
+
+        Warning:
+            Требует открытый браузер с активным контекстом ADS Power.
+
+        Examples:
+            >>> # Поймать popup окно Metamask
+            >>> metamask_page = ads.catch_page('notification.html')
+            >>> if metamask_page:
+            ...     metamask_page.locator('button.confirm').click()
+
+            >>> # Поиск по нескольким вариантам url
+            >>> page = ads.catch_page(['transaction', 'confirm', 'approve'])
         """
         if isinstance(url_contains, str):
             url_contains = [url_contains]
@@ -177,7 +201,8 @@ class Ads:
                         self.pages_context_reload()
                     random_sleep(1, 2)
 
-        logger.warning(f'{self.profile_number} Ошибка страница не найдена: {url_contains}')
+        logger.warning(
+            f'{self.profile_number} Ошибка страница не найдена: {url_contains}')
         return None
 
     def pages_context_reload(self) -> None:
@@ -213,12 +238,14 @@ class Ads:
                 'user_proxy_config': proxy_config
             }
             url = self._local_api_url + 'user/update'
-            response = requests.post(url, json=data, headers={'Content-Type': 'application/json'})
+            response = requests.post(url, json=data, headers={
+                                     'Content-Type': 'application/json'})
             response.raise_for_status()
             random_sleep(2)
 
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при установке прокси: {e}')
+            logger.error(
+                f'{self.profile_number} Ошибка при установке прокси: {e}')
             raise e
 
     def _get_profile_id(self) -> str:
@@ -234,7 +261,8 @@ class Ads:
             data = get_response(url, params)
             return data.get('data', {}).get('list', [{}])[0].get('user_id', '')
         except Exception as e:
-            logger.error(f'{self.profile_number} Ошибка при получении id профиля: {e}')
+            logger.error(
+                f'{self.profile_number} Ошибка при получении id профиля: {e}')
             raise e
 
     def _check_proxy(self) -> None:
@@ -265,7 +293,8 @@ class Ads:
             logger.error(f'{self.profile_number} Ошибка при получении ip')
             self.page.goto('https://api.ipify.org/?format=json')
             random_sleep(1, 2)
-            ip_text = self.page.locator('//pre').inner_text()  # парсим json и возвращаем ip
+            # парсим json и возвращаем ip
+            ip_text = self.page.locator('//pre').inner_text()
             ip = json.loads(ip_text)['ip']  # парсим json и возвращаем ip
 
         return ip
@@ -282,12 +311,28 @@ class Ads:
     ) -> None:
         """
         Открывает страницу по url, если еще не открыта. Может ждать элемент на странице.
+
         :param url: ссылка на страницу, желательно в формате https://
-        :param wait_until: состояние страницы, когда считается что она загрузилась. По умолчанию load.
-        :param locator: элемент, который нужно дождаться на странице
-        :param timeout: время ожидания в секундах
-        :param attempts: количество попыток открыть страницу
+        :param wait_until: состояние страницы, когда считается что она загрузилась. По умолчанию 'load'.
+                          Варианты: 'commit', 'domcontentloaded', 'load', 'networkidle'
+        :param locator: элемент Playwright, который нужно дождаться на странице
+        :param timeout: время ожидания в секундах (автоматически конвертируется в миллисекунды)
+        :param attempts: количество попыток открыть страницу при ошибках
         :return: None
+
+        Examples:
+            >>> # Простое открытие страницы
+            >>> ads.open_url('https://google.com')
+
+            >>> # Открыть и дождаться конкретного элемента
+            >>> button = ads.page.locator('button.connect')
+            >>> ads.open_url('https://app.uniswap.org', locator=button)
+
+            >>> # Использовать networkidle для SPA приложений
+            >>> ads.open_url('https://app.example.com', wait_until='networkidle')
+
+            >>> # С повторными попытками
+            >>> ads.open_url('https://unstable-site.com', attempts=3)
         """
         # Переводим время ожидания в миллисекунды, если передали секунды
         if timeout < 1000:
@@ -308,7 +353,8 @@ class Ads:
                 except Exception as e:
                     if attempt == attempts - 1:
                         raise e
-                    logger.error(f'{self.profile_number} Ошибка при открытии страницы {url}: {e}')
+                    logger.error(
+                        f'{self.profile_number} Ошибка при открытии страницы {url}: {e}')
                     random_sleep(1, 2)
 
         # Если передан xpath, ждем элемент на странице заданное время
@@ -468,7 +514,8 @@ class Ads:
         :return: True, если условие выполнено, иначе False.
         """
         # Преобразуем строку в локатор, если необходимо
-        locator = self.page.get_by_text(locator) if isinstance(locator, str) else locator
+        locator = self.page.get_by_text(
+            locator) if isinstance(locator, str) else locator
 
         for _ in range(attempts):
             random_sleep()
@@ -503,6 +550,7 @@ class Ads:
                 return True
 
             except Exception as error:
-                logger.error(f'{self.profile_number} Ошибка при проверке элемента: {error}')
+                logger.error(
+                    f'{self.profile_number} Ошибка при проверке элемента: {error}')
 
         return False

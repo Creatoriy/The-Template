@@ -174,3 +174,8 @@ cython_debug/
 /config/data/addresses.txt
 .DS_Store
 .vscode/
+.cursor/rules/python/Rule.md
+.cursor/rules/context7/Rule.md
+uv.lock
+pyproject.toml
+DOCUMENTATION_PLAN.md

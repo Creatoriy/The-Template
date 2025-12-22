@@ -186,10 +186,23 @@ class Metamask(Wallet):
 
     def connect(self, locator: Locator, timeout: int = 30) -> None:
         """
-        Подтверждает подключение к metamask.
-        :param locator: локатор кнопки подключения, после нажатия которой появляется окно метамаска.
-        :param timeout: время ожидания открытия страницы подключения метамаска в секундах, по умолчанию 30
+        Подтверждает подключение кошелька Metamask к dApp.
+
+        Автоматически ловит popup окно Metamask и подтверждает подключение.
+
+        :param locator: локатор кнопки подключения на сайте (например, "Connect Wallet")
+        :param timeout: время ожидания открытия страницы подключения метамаска в секундах
         :return: None
+
+        :raises Exception: если не удалось поймать окно Metamask
+
+        Examples:
+            >>> # Подключиться к dApp
+            >>> connect_button = ads.page.locator('button:has-text("Connect")')
+            >>> metamask.connect(connect_button)
+
+            >>> # С увеличенным таймаутом
+            >>> metamask.connect(connect_button, timeout=60)
         """
         try:
             with self.ads.context.expect_page(timeout=timeout * 1000) as page_catcher:
@@ -210,10 +223,21 @@ class Metamask(Wallet):
 
     def sign(self, locator: Locator, timeout: int = 30) -> None:
         """
-        Подтверждает подпись в metamask.
-        :param locator: локатор кнопки вызова подписи.
-        :param timeout: время ожидания открытия страницы подписи в секундах, по умолчанию 30 секунд
+        Подтверждает подпись сообщения в Metamask.
+
+        Автоматически ловит popup окно Metamask и подтверждает подпись.
+        Используется для Sign Message, Personal Sign и подобных операций.
+
+        :param locator: локатор кнопки вызова подписи на сайте
+        :param timeout: время ожидания открытия страницы подписи в секундах
         :return: None
+
+        :raises Exception: если не удалось поймать окно Metamask
+
+        Examples:
+            >>> # Подписать сообщение
+            >>> sign_button = ads.page.locator('button:has-text("Sign")')
+            >>> metamask.sign(sign_button)
         """
         try:
             with self.ads.context.expect_page(timeout=timeout * 1000) as page_catcher:
@@ -237,10 +261,25 @@ class Metamask(Wallet):
 
     def send_tx(self, locator: Locator, timeout: int = 30) -> None:
         """
-        Подтверждает отправку транзакции в metamask.
-        :param locator: локатор кнопки вызова транзакции
-        :param timeout: время ожидания в секундах, по умолчанию 30
-        :return None
+        Подтверждает отправку транзакции в Metamask.
+
+        Автоматически ловит popup окно Metamask и подтверждает транзакцию.
+        Используется для swap, transfer, approve и других on-chain операций.
+
+        :param locator: локатор кнопки вызова транзакции на сайте
+        :param timeout: время ожидания в секундах
+        :return: None
+
+        :raises Exception: если не удалось поймать окно Metamask
+
+        Examples:
+            >>> # Подтвердить swap
+            >>> swap_button = ads.page.locator('button:has-text("Swap")')
+            >>> metamask.send_tx(swap_button)
+
+            >>> # Подтвердить approve
+            >>> approve_button = ads.page.locator('button.approve')
+            >>> metamask.send_tx(approve_button, timeout=60)
         """
         try:
             with self.ads.context.expect_page(timeout=timeout * 1000) as page_catcher:
