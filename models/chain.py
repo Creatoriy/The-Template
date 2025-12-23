@@ -13,8 +13,8 @@ class Chain:
     - native_token: тикер нативного токена сети, по умолчанию 'ETH'
     - is_eip1559: если сеть поддерживает EIP-1559, то True, иначе False, можно взять тут https://api.debank.com/chain/list
     - metamask_name: название сети в metamask, по умолчанию берется из параметра name
-    - okx_name: название сети в OKX, список сетей можно получить запустив метод bot.okx.get_chains(), по умолчанию None
-    - binance_name: название сети в Binance, список сетей можно получить запустив метод bot.binance.get_chains(), по умолчанию None
+    - okx_name: название сети в OKX, список сетей можно получить запустив метод bot.exchanges.okx.get_chains(), по умолчанию None
+    - binance_name: название сети в Binance, список сетей можно получить запустив метод bot.exchanges.binance.get_chains(), по умолчанию None
     - multiplier: множитель для увеличения комиссии, если транзакции не проходят из-за низкой комиссии, по умолчанию 1.0
     """
 

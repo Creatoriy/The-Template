@@ -27,8 +27,8 @@ class Chains:
     - native_token: тикер нативного токена сети, по умолчанию 'ETH'
     - is_eip1559: если сеть поддерживает EIP-1559, то True, иначе False, можно взять тут https://api.debank.com/chain/list
     - metamask_name: название сети в metamask, по умолчанию берется из параметра name
-    - okx_name: название сети в OKX, список сетей можно получить запустив метод bot.okx.get_chains()
-    - binance_name: название сети в Binance, список сетей можно получить запустив метод bot.binance.get_chains()
+    - okx_name: название сети в OKX, список сетей можно получить запустив метод bot.exchanges.okx.get_chains()
+    - binance_name: название сети в Binance, список сетей можно получить запустив метод bot.exchanges.binance.get_chains()
     - multiplier: множитель для увеличения комиссии, если транзакции не проходят из-за низкой комиссии, по умолчанию 1.0
 
 
@@ -143,7 +143,8 @@ class Chains:
         :return: объект сети Chain, если не находит, бросает исключение ChainNameError
         """
         if not isinstance(name, str):
-            raise TypeError(f'Ошибка поиска сети, для поиска нужно передать str, передано:  {type(name)}')
+            raise TypeError(
+                f'Ошибка поиска сети, для поиска нужно передать str, передано:  {type(name)}')
 
         name = name.upper()
         try:
@@ -154,8 +155,8 @@ class Chains:
                 if isinstance(chain, Chain):
                     if chain.name.upper() == name:
                         return chain
-            raise ChainNameError(f'Сеть {name} не найдена, добавьте ее в config/Chains, имена должны совпадать')
-
+            raise ChainNameError(
+                f'Сеть {name} не найдена, добавьте ее в config/Chains, имена должны совпадать')
 
     @classmethod
     def get_chains_list(cls) -> list[Chain]:
@@ -164,7 +165,8 @@ class Chains:
         :return: список сетей
         """
         if not cls._chains:
-            cls._chains = [chain for chain in cls.__dict__.values() if isinstance(chain, Chain)]
+            cls._chains = [
+                chain for chain in cls.__dict__.values() if isinstance(chain, Chain)]
         return cls._chains
 
 
