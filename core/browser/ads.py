@@ -22,6 +22,11 @@ class Ads:
         self._profile_id = None  # id профиля в ADS, реализован геттер profile_id
         self._user_agent = None  # user_agent браузера, реализован геттер user_agent
 
+        # Подготовка заголовков для API запросов
+        self._headers = {}
+        if config.adspower_api_key:
+            self._headers['Authorization'] = f'Bearer {config.adspower_api_key}'
+
         if config.set_proxy:
             self.proxy = account.proxy
             self._set_proxy()
@@ -67,7 +72,7 @@ class Ads:
         url = self._local_api_url + 'browser/start'
         random_sleep(1, 2)
         try:
-            data = get_response(url, params)
+            data = get_response(url, params, headers=self._headers)
             return data.get('data', {}).get('ws', {}).get('puppeteer', '')
         except Exception as e:
             logger.error(
@@ -83,7 +88,7 @@ class Ads:
         url = self._local_api_url + 'browser/active'
         random_sleep(1, 2)
         try:
-            data = get_response(url, params)
+            data = get_response(url, params, headers=self._headers)
             if data.get('data', {}).get('status', '') == 'Active':
                 logger.info(f'{self.profile_number} Браузер уже активен')
                 return data.get('data', {}).get('ws', {}).get('puppeteer', '')
@@ -159,7 +164,7 @@ class Ads:
         url = self._local_api_url + 'browser/stop'
         random_sleep(1, 2)
         try:
-            get_response(url, params)
+            get_response(url, params, headers=self._headers)
         except Exception as e:
             logger.error(
                 f'{self.profile_number} Ошибка при остановке браузера: {e}')
@@ -238,8 +243,11 @@ class Ads:
                 'user_proxy_config': proxy_config
             }
             url = self._local_api_url + 'user/update'
-            response = requests.post(url, json=data, headers={
-                                     'Content-Type': 'application/json'})
+            headers = {'Content-Type': 'application/json'}
+            if config.adspower_api_key:
+                headers['Authorization'] = f'Bearer {config.adspower_api_key}'
+
+            response = requests.post(url, json=data, headers=headers)
             response.raise_for_status()
             random_sleep(2)
 
@@ -258,7 +266,7 @@ class Ads:
 
         random_sleep(1, 2)
         try:
-            data = get_response(url, params)
+            data = get_response(url, params, headers=self._headers)
             return data.get('data', {}).get('list', [{}])[0].get('user_id', '')
         except Exception as e:
             logger.error(

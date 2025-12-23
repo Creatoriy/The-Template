@@ -63,10 +63,16 @@ class Config:
     # id чата в телеграме, куда отправлять сообщения
     chat_id = '12345678'
     # типы логов для отправки в телеграм
-    alert_types = ['CRITICAL', 'SUCCESS']  # 'ERROR', 'WARNING', 'INFO', 'DEBUG'
+    # 'ERROR', 'WARNING', 'INFO', 'DEBUG'
+    alert_types = ['CRITICAL', 'SUCCESS']
 
     # адрес расширения в браузере ADS
     metamask_url = 'chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/home.html'
+
+    # API-ключ для работы с ADS Power (если включена защита по API-ключу)
+    # Получить можно в настройках ADS Power -> API Settings
+    # Если защита выключена, оставьте пустым
+    adspower_api_key = ''
 
     # ниже системные переменные, не меняйте их
     bot_token = os.getenv('BOT_TOKEN')
