@@ -619,27 +619,47 @@ class Onchain:
         while self.get_gas_price() > gas_limit:
             random_sleep(5, 10)
 
-    def get_pk_from_seed(self, seed: str | list) -> str:
+    def get_pk_from_seed(self, seed: str | list, index: int = 0) -> str:
         """
-        Получение приватного ключа из seed фразы.
+        Получение приватного ключа из seed фразы с использованием BIP-44 стандарта (как в MetaMask).
+
+        Генерирует приватные ключи детерминированно по порядку, используя путь деривации:
+        m/44'/60'/0'/0/{index}
 
         :param seed: seed фраза в виде строки или списка слов
+        :param index: номер приватного ключа (0, 1, 2, ...), по умолчанию 0
         :return: приватный ключ в формате hex строки
 
         Examples:
-            >>> # Из строки
+            >>> # Первый приватный ключ (index=0, по умолчанию)
             >>> seed = "word1 word2 word3 ... word12"
-            >>> private_key = onchain.get_pk_from_seed(seed)
-            >>> print(f'Private key: {private_key}')
+            >>> private_key_0 = onchain.get_pk_from_seed(seed)
+            >>> print(f'Private key 0: {private_key_0}')
 
-            >>> # Из списка
+            >>> # Второй приватный ключ (index=1)
+            >>> private_key_1 = onchain.get_pk_from_seed(seed, index=1)
+            >>> print(f'Private key 1: {private_key_1}')
+
+            >>> # Третий приватный ключ (index=2)
+            >>> private_key_2 = onchain.get_pk_from_seed(seed, index=2)
+            >>> print(f'Private key 2: {private_key_2}')
+
+            >>> # Из списка слов
             >>> seed_list = ["word1", "word2", "word3", ..., "word12"]
-            >>> private_key = onchain.get_pk_from_seed(seed_list)
+            >>> private_key = onchain.get_pk_from_seed(seed_list, index=0)
         """
         EthAccount.enable_unaudited_hdwallet_features()
         if isinstance(seed, list):
             seed = ' '.join(seed)
-        return EthAccount.from_mnemonic(seed).key.hex()
+
+        # BIP-44 путь деривации для Ethereum: m/44'/60'/0'/0/{index}
+        # 44' - BIP-44 стандарт
+        # 60' - Ethereum coin type
+        # 0' - account number
+        # 0 - change (0 для внешних адресов)
+        # index - номер приватного ключа
+        account_path = f"m/44'/60'/0'/0/{index}"
+        return EthAccount.from_mnemonic(seed, account_path=account_path).key.hex()
 
     def is_eip_1559(self) -> bool:
         """
